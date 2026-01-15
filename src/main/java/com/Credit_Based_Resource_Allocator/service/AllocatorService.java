@@ -34,10 +34,10 @@ public class AllocatorService {
      * @return the allocation entity if created properly, otherwise throws an error.
      */
     public AllocationEntity createAllocation(AllocationRequest allocationRequest) {
-        BigDecimal price = costsDataService.getCost(allocationRequest.getResourceId());
+        BigDecimal cost = costsDataService.getCost(allocationRequest.getResourceId());
         BigDecimal quantity = allocationRequest.getQuantity();
 
-        updatePortfolio(allocationRequest.getAccountId(), allocationRequest.getResourceId(), allocationRequest.getSide(), quantity, price, false);
+        updateAccount(allocationRequest.getAccountId(), allocationRequest.getResourceId(), allocationRequest.getSide(), quantity, cost, false);
 
         AllocationEntity allocation = new AllocationEntity(
                 allocationRequest.getAccountId(),
@@ -45,7 +45,7 @@ public class AllocatorService {
                 AllocationStatus.CREATED,
                 allocationRequest.getSide(),
                 quantity,
-                price
+                cost
         );
 
         return allocationRepository.save(allocation);
@@ -57,7 +57,7 @@ public class AllocatorService {
      * @return the allocation entity associated with the id if it exists, otherwise throws an error.
      */
     public AllocationEntity getAllocation(Long allocationId) {
-        return allocationRepository.findById(allocationId).orElseThrow(() -> new AllocationNotFoundException("Order not found"));
+        return allocationRepository.findById(allocationId).orElseThrow(() -> new AllocationNotFoundException("Allocation not found"));
     }
 
     /**
@@ -67,11 +67,11 @@ public class AllocatorService {
      */
     public AllocationEntity cancelAllocation(Long allocationId) {
         AllocationEntity allocation = getAllocation(allocationId);
-        if (allocation.getStatus() != AllocationStatus.CREATED) throw new BusinessException("Order cannot be cancelled");
+        if (allocation.getStatus() != AllocationStatus.CREATED) throw new BusinessException("Allocation cannot be cancelled");
 
-        BigDecimal price = costsDataService.getCost(allocation.getResourceId());
+        BigDecimal cost = costsDataService.getCost(allocation.getResourceId());
         BigDecimal quantity = allocation.getQuantity();
-        updatePortfolio(allocation.getAccountId(), allocation.getResourceId(), allocation.getSide(), quantity, price, true);
+        updateAccount(allocation.getAccountId(), allocation.getResourceId(), allocation.getSide(), quantity, cost, true);
 
         allocation.setStatus(AllocationStatus.CANCELLED);
         return allocationRepository.save(allocation);
@@ -83,12 +83,12 @@ public class AllocatorService {
      * @param resourceId the resource id.
      * @param side whether it's a ALLOCATE or RELEASE allocation.
      * @param quantity the quantity of the allocation.
-     * @param price the cost of the allocation.
+     * @param cost the cost of the allocation.
      * @param isCancelling whether the allocation is being created or canceled. If true then reverts the changes.
      * @throws BusinessException if the account is not found, the amount of credits is insufficient, or the resources doesn't include the required resource quantity.
      */
-    private void updatePortfolio(String accountId, String resourceId, AllocationSide side, BigDecimal quantity, BigDecimal price, boolean isCancelling) {
-        BigDecimal totalPrice = price.multiply(quantity);
+    private void updateAccount(String accountId, String resourceId, AllocationSide side, BigDecimal quantity, BigDecimal cost, boolean isCancelling) {
+        BigDecimal totalCost = cost.multiply(quantity);
 
         AccountCreditsEntity accountCredits = accountCreditsRepository.findById(accountId)
                 .orElse(new AccountCreditsEntity(accountId, new BigDecimal("5000.00")));
@@ -96,13 +96,13 @@ public class AllocatorService {
                 .orElse(new AllocatedResourcesEntity(accountId, resourceId, BigDecimal.ZERO));
 
         if ((side == AllocationSide.ALLOCATE && !isCancelling) || (side == AllocationSide.RELEASE && isCancelling)) {
-            if (accountCredits.getAmount().compareTo(totalPrice) < 0 ) throw new BusinessException("Insufficient buying power");
-            accountCredits = new AccountCreditsEntity(accountCredits.getAccountId(), accountCredits.getAmount().subtract(totalPrice));
+            if (accountCredits.getAmount().compareTo(totalCost) < 0 ) throw new BusinessException("Insufficient buying power");
+            accountCredits = new AccountCreditsEntity(accountCredits.getAccountId(), accountCredits.getAmount().subtract(totalCost));
             allocatedResources = new AllocatedResourcesEntity(allocatedResources.getAccountId(), allocatedResources.getResourceId(), allocatedResources.getQuantity().add(quantity));
         }
         else if ((side == AllocationSide.RELEASE && !isCancelling) || (side == AllocationSide.ALLOCATE && isCancelling)) {
             if (allocatedResources.getQuantity().compareTo(quantity) < 0) throw new BusinessException("Insufficient inventory");
-            accountCredits = new AccountCreditsEntity(accountCredits.getAccountId(), accountCredits.getAmount().add(totalPrice));
+            accountCredits = new AccountCreditsEntity(accountCredits.getAccountId(), accountCredits.getAmount().add(totalCost));
             allocatedResources = new AllocatedResourcesEntity(allocatedResources.getAccountId(), allocatedResources.getResourceId(), allocatedResources.getQuantity().subtract(quantity));
         }
 
