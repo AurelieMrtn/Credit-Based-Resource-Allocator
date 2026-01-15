@@ -22,10 +22,10 @@ public class AllocationEntity {
     private BigDecimal quantity;
     private BigDecimal cost;
 
-    public AllocationEntity(String accountId, String resourceId, AllocationStatus orderStatus, AllocationSide side, BigDecimal quantity, BigDecimal cost) {
+    public AllocationEntity(String accountId, String resourceId, AllocationStatus status, AllocationSide side, BigDecimal quantity, BigDecimal cost) {
         this.accountId = accountId;
         this.resourceId = resourceId;
-        this.status = orderStatus;
+        this.status = status;
         this.side = side;
         this.quantity = quantity;
         this.cost = cost;

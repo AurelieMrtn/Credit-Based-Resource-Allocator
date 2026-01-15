@@ -23,7 +23,7 @@ public class AllocatorController {
      * @return the allocation entity and status 200 if created properly.
      */
     @PostMapping
-    public ResponseEntity<AllocationEntity> createOrder(@RequestBody AllocationRequest allocationRequest) {
+    public ResponseEntity<AllocationEntity> createAllocation(@RequestBody AllocationRequest allocationRequest) {
         AllocationEntity allocation = allocatorService.createAllocation(allocationRequest);
         return ResponseEntity.ok(allocation);
     }
@@ -34,18 +34,18 @@ public class AllocatorController {
      * @return the allocation entity associated with the id and status 200 if it exists.
      */
     @GetMapping("/{allocationId}")
-    public ResponseEntity<AllocationEntity> getOrder(@PathVariable("allocationId") Long allocationId) {
+    public ResponseEntity<AllocationEntity> getAllocation(@PathVariable("allocationId") Long allocationId) {
         AllocationEntity allocation = allocatorService.getAllocation(allocationId);
         return ResponseEntity.ok(allocation);
     }
 
     /**
-     * This endpoint allows to cancel an order using its id.
+     * This endpoint allows to cancel an allocation using its id.
      * @param allocationId is the allocation id.
      * @return the allocation entity and status 200 if cancelled properly.
      */
     @PutMapping("/{allocationId}")
-    public ResponseEntity<AllocationEntity> cancelOrder(@PathVariable("allocationId") Long allocationId) {
+    public ResponseEntity<AllocationEntity> cancelAllocation(@PathVariable("allocationId") Long allocationId) {
         AllocationEntity allocation = allocatorService.cancelAllocation(allocationId);
         return ResponseEntity.ok(allocation);
     }
