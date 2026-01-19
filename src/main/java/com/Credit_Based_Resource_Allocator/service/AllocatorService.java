@@ -96,12 +96,12 @@ public class AllocatorService {
                 .orElse(new AllocatedResourcesEntity(accountId, resourceId, BigDecimal.ZERO));
 
         if ((side == AllocationSide.ALLOCATE && !isCancelling) || (side == AllocationSide.RELEASE && isCancelling)) {
-            if (accountCredits.getAmount().compareTo(totalCost) < 0 ) throw new BusinessException("Insufficient buying power");
+            if (accountCredits.getAmount().compareTo(totalCost) < 0 ) throw new BusinessException("Insufficient credit");
             accountCredits = new AccountCreditsEntity(accountCredits.getAccountId(), accountCredits.getAmount().subtract(totalCost));
             allocatedResources = new AllocatedResourcesEntity(allocatedResources.getAccountId(), allocatedResources.getResourceId(), allocatedResources.getQuantity().add(quantity));
         }
         else if ((side == AllocationSide.RELEASE && !isCancelling) || (side == AllocationSide.ALLOCATE && isCancelling)) {
-            if (allocatedResources.getQuantity().compareTo(quantity) < 0) throw new BusinessException("Insufficient inventory");
+            if (allocatedResources.getQuantity().compareTo(quantity) < 0) throw new BusinessException("Insufficient resources");
             accountCredits = new AccountCreditsEntity(accountCredits.getAccountId(), accountCredits.getAmount().add(totalCost));
             allocatedResources = new AllocatedResourcesEntity(allocatedResources.getAccountId(), allocatedResources.getResourceId(), allocatedResources.getQuantity().subtract(quantity));
         }
