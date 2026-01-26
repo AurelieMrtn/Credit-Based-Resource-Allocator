@@ -3,6 +3,7 @@ package com.Credit_Based_Resource_Allocator.api;
 import com.Credit_Based_Resource_Allocator.AllocationStatus;
 import com.Credit_Based_Resource_Allocator.repository.*;
 import com.Credit_Based_Resource_Allocator.service.CostsDataService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,6 +105,19 @@ class AllocatorControllerTest {
 
 		verifyCredit("account-id-1", new BigDecimal("4000.00"));
 		verifyResources("account-id-1", "GPU-A100", new BigDecimal("5.00"));
+	}
+
+    @Test
+	public void shouldThrowBusinessExceptionWhenInsufficientCreditsToAllocate() throws Exception {
+		Map<String, String> object = new HashMap<>();
+		object.put("accountId", "account-id-1");
+		object.put("resourceId", "GPU-A100");
+		object.put("side", "ALLOCATE");
+		object.put("quantity", "100.00");
+
+		createAllocation(objectMapper.writeValueAsString(object))
+				.andExpect(status().is(400))
+				.andExpect(result -> assertEquals("Insufficient credit", result.getResolvedException().getMessage()));
 	}
 
 	@Test
