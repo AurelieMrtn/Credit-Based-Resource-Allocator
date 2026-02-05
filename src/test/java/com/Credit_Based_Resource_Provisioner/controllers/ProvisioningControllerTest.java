@@ -1,5 +1,6 @@
 package com.Credit_Based_Resource_Provisioner.controllers;
 
+import com.Credit_Based_Resource_Provisioner.models.ProvisioningAction;
 import com.Credit_Based_Resource_Provisioner.models.ProvisioningStatus;
 import com.Credit_Based_Resource_Provisioner.repositories.*;
 import com.Credit_Based_Resource_Provisioner.services.CostsDataService;
@@ -244,6 +245,23 @@ class ProvisioningControllerTest {
 		assertThat(accountCredits.getAmount())
 				.as("Credits of account %s should equal %s.", accountId, expectedAmount)
 				.isEqualByComparingTo(expectedAmount);
+	}
+
+	private String allocateRequest(String quantity) throws Exception {
+		return requestBuilder(ProvisioningAction.ALLOCATE, quantity);
+	}
+
+	private String releaseRequest(String quantity) throws Exception {
+		return requestBuilder(ProvisioningAction.RELEASE, quantity);
+	}
+
+	private String requestBuilder(ProvisioningAction side, String quantity) throws Exception {
+		Map<String, String> object = new HashMap<>();
+		object.put("accountId", "account-id-1");
+		object.put("resourceId", "GPU-A100");
+		object.put("side", side.toString());
+		object.put("quantity", quantity);
+		return objectMapper.writeValueAsString(object);
 	}
 
 }
